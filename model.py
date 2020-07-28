@@ -2,10 +2,12 @@ from typing import Tuple, Dict, Union, List, Optional, Sequence
 
 import torch
 from torch import nn, Tensor
-from torch.utils.data import Dataset, DataLoader, RandomSampler, DistributedSampler, random_split
+from torch.utils.data import DataLoader, RandomSampler, DistributedSampler, random_split
 from torch.optim import Optimizer, Adam
 from torch.nn import CrossEntropyLoss
 from pytorch_lightning.core.lightning import LightningModule
+
+from dataset import Dataset
 
 class Model(LightningModule):
 
