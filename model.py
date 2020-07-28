@@ -10,12 +10,19 @@ from pytorch_lightning.core.lightning import LightningModule
 class Model(LightningModule):
 
     def __init__(self,
-                 input_path: str = None):
+                 input_path: str = None,
+                 batch_size: int = 4,
+                 num_workers: int = 0,
+                 lr: float = 2e-5):
         super(Model, self).__init__()
         # REQUIRED
         # define dataset and layers
         self.dataset = Dataset(input_path)
         self.layer = nn.Module()
+
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.lr = lr
 
     def forward(self,
                 batch: Union[Tensor, Dict] = None) -> Union[float, Dict]:
@@ -36,14 +43,16 @@ class Model(LightningModule):
         # REQUIRED
         train_dataloader = DataLoader(self.train_dataset,
                                       sampler=RandomSampler(self.train_dataset),
-                                      batch_size=4)
+                                      batch_size=self.batch_size,
+                                      num_workers=self.num_workers)
         return train_dataloader
 
     def val_dataloader(self) -> Union[DataLoader, List[DataLoader]]:
         # OPTIONAL
         val_dataloader = DataLoader(self.val_dataset,
                                     sampler=RandomSampler(self.val_dataset),
-                                    batch_size=4)
+                                    batch_size=self.batch_size,
+                                    num_workers=self.num_workers)
         return val_dataloader
 
     def configure_optimizers(self) -> Optional[
@@ -54,7 +63,7 @@ class Model(LightningModule):
         # REQUIRED
         # can return multiple optimizers and learning_rate schedulers
         optimizer = Adam(self.parameters(),
-                         lr=2e-5)
+                         lr=self.lr)
         return optimizer
 
     def training_step(self, batch, batch_idx) -> Union[
