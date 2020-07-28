@@ -2,7 +2,7 @@ from typing import Tuple, Dict, Union, List, Optional, Sequence
 
 import torch
 from torch import nn, Tensor
-from torch.utils.data import Dataset, DataLoader, RandomSampler, random_split
+from torch.utils.data import Dataset, DataLoader, RandomSampler, DistributedSampler, random_split
 from torch.optim import Optimizer, Adam
 from torch.nn import CrossEntropyLoss
 from pytorch_lightning.core.lightning import LightningModule
@@ -13,7 +13,8 @@ class Model(LightningModule):
                  input_path: str = None,
                  batch_size: int = 4,
                  num_workers: int = 0,
-                 lr: float = 2e-5):
+                 lr: float = 2e-5,
+                 cuda_device: int = 0):
         super(Model, self).__init__()
         # REQUIRED
         # define dataset and layers
@@ -23,6 +24,7 @@ class Model(LightningModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.lr = lr
+        self.cuda_device = cuda_device # Number of gpu to use, not gpu index
 
     def forward(self,
                 batch: Union[Tensor, Dict] = None) -> Union[float, Dict]:
@@ -41,16 +43,26 @@ class Model(LightningModule):
 
     def train_dataloader(self) -> Union[DataLoader, List[DataLoader]]:
         # REQUIRED
+        if self.cuda_device > 0:
+            sampler = DistributedSampler(self.train_dataset)
+        else:
+            sampler = RandomSampler(self.train_dataset)
+
         train_dataloader = DataLoader(self.train_dataset,
-                                      sampler=RandomSampler(self.train_dataset),
+                                      sampler=sampler,
                                       batch_size=self.batch_size,
                                       num_workers=self.num_workers)
         return train_dataloader
 
     def val_dataloader(self) -> Union[DataLoader, List[DataLoader]]:
         # OPTIONAL
+        if self.cuda_device > 0:
+            sampler = DistributedSampler(self.val_dataset)
+        else:
+            sampler = RandomSampler(self.val_dataset)
+
         val_dataloader = DataLoader(self.val_dataset,
-                                    sampler=RandomSampler(self.val_dataset),
+                                    sampler=sampler,
                                     batch_size=self.batch_size,
                                     num_workers=self.num_workers)
         return val_dataloader
