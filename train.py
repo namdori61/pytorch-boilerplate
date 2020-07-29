@@ -32,18 +32,20 @@ def main(argv):
 
     # most basic trainer, uses good defaults (1 gpu)
     if FLAGS.cuda_device > 1:
-        trainer = Trainer(gpus=FLAGS.cuda_device,
+        trainer = Trainer(deterministic=True,
+                          gpus=FLAGS.cuda_device,
                           distributed_backend='ddp',
                           log_gpu_memory=True)
         logging.info(f'There are {torch.cuda.device_count()} GPU(s) available.')
         logging.info(f'Use the number of GPU: {FLAGS.cuda_device}')
     elif FLAGS.cuda_device == 1:
-        trainer = Trainer(gpus=FLAGS.cuda_device,
+        trainer = Trainer(deterministic=True,
+                          gpus=FLAGS.cuda_device,
                           log_gpu_memory=True)
         logging.info(f'There are {torch.cuda.device_count()} GPU(s) available.')
         logging.info(f'Use the number of GPU: {FLAGS.cuda_device}')
     else:
-        trainer = Trainer()
+        trainer = Trainer(deterministic=True)
         logging.info('No GPU available, using the CPU instead.')
     trainer.fit(model)
 
