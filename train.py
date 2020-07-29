@@ -1,7 +1,7 @@
 from absl import app, flags, logging
 
 import torch
-from pytorch_lightning import Trainer
+from pytorch_lightning import Trainer, seed_everything
 
 from model import Model
 
@@ -18,6 +18,8 @@ flags.DEFINE_integer('num_workers', default=0,
                      help='If given, uses this number of workers in data loading')
 flags.DEFINE_float('lr', default=2e-5,
                    help='If given, uses this learning rate in training')
+flags.DEFINE_integer('seed', default=0,
+                     help='If given, uses this number as random seed in training and become deterministic')
 
 
 def main(argv):
@@ -25,6 +27,8 @@ def main(argv):
                   batch_size=FLAGS.batch_size,
                   num_workers=FLAGS.num_workers,
                   lr=FLAGS.lr)
+    if FLAGS.seed != 0:
+        seed_everything(FLAGS.seed)
 
     # most basic trainer, uses good defaults (1 gpu)
     if FLAGS.cuda_device > 1:
