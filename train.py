@@ -3,6 +3,7 @@ from absl import app, flags, logging
 import torch
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger
 
 from model import Model
 
@@ -44,6 +45,11 @@ def main(argv):
         prefix='model.ckpt'
     )
 
+    logger = TensorBoardLogger(
+        save_dir=FLAGS.save_dir,
+        name='logs'
+    )
+
     # most basic trainer, uses good defaults (1 gpu)
     if FLAGS.cuda_device > 1:
         trainer = Trainer(deterministic=True,
@@ -51,7 +57,8 @@ def main(argv):
                           distributed_backend='ddp',
                           log_gpu_memory=True,
                           checkpoint_callback=checkpoint_callback,
-                          max_epochs=FLAGS.max_epochs)
+                          max_epochs=FLAGS.max_epochs,
+                          logger=logger)
         logging.info(f'There are {torch.cuda.device_count()} GPU(s) available.')
         logging.info(f'Use the number of GPU: {FLAGS.cuda_device}')
     elif FLAGS.cuda_device == 1:
@@ -59,13 +66,15 @@ def main(argv):
                           gpus=FLAGS.cuda_device,
                           log_gpu_memory=True,
                           checkpoint_callback=checkpoint_callback,
-                          max_epochs=FLAGS.max_epochs)
+                          max_epochs=FLAGS.max_epochs,
+                          logger=logger)
         logging.info(f'There are {torch.cuda.device_count()} GPU(s) available.')
         logging.info(f'Use the number of GPU: {FLAGS.cuda_device}')
     else:
         trainer = Trainer(deterministic=True,
                           checkpoint_callback=checkpoint_callback,
-                          max_epochs=FLAGS.max_epochs)
+                          max_epochs=FLAGS.max_epochs,
+                          logger=logger)
         logging.info('No GPU available, using the CPU instead.')
     trainer.fit(model)
 
