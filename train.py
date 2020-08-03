@@ -49,7 +49,7 @@ def main(argv):
 
     logger = TensorBoardLogger(
         save_dir=FLAGS.save_dir,
-        name='logs_' + FLAGS.model,
+        name='logs',
         version=FLAGS.version
     )
 
