@@ -2,7 +2,7 @@ from absl import app, flags, logging
 
 import torch
 from pytorch_lightning import Trainer, seed_everything
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateLogger
 from pytorch_lightning.loggers import TensorBoardLogger
 
 from model import Model
@@ -60,6 +60,7 @@ def main(argv):
         name='logs',
         version=FLAGS.version
     )
+    lr_logger = LearningRateLogger()
 
     # most basic trainer, uses good defaults (1 gpu)
     if FLAGS.cuda_device > 1:
@@ -70,7 +71,8 @@ def main(argv):
                           checkpoint_callback=checkpoint_callback,
                           early_stop_callback=early_stop,
                           max_epochs=FLAGS.max_epochs,
-                          logger=logger)
+                          logger=logger,
+                          callbacks=[lr_logger])
         logging.info(f'There are {torch.cuda.device_count()} GPU(s) available.')
         logging.info(f'Use the number of GPU: {FLAGS.cuda_device}')
     elif FLAGS.cuda_device == 1:
@@ -80,7 +82,8 @@ def main(argv):
                           checkpoint_callback=checkpoint_callback,
                           early_stop_callback=early_stop,
                           max_epochs=FLAGS.max_epochs,
-                          logger=logger)
+                          logger=logger,
+                          callbacks=[lr_logger])
         logging.info(f'There are {torch.cuda.device_count()} GPU(s) available.')
         logging.info(f'Use the number of GPU: {FLAGS.cuda_device}')
     else:
@@ -88,7 +91,8 @@ def main(argv):
                           checkpoint_callback=checkpoint_callback,
                           early_stop_callback=early_stop,
                           max_epochs=FLAGS.max_epochs,
-                          logger=logger)
+                          logger=logger,
+                          callbacks=[lr_logger])
         logging.info('No GPU available, using the CPU instead.')
     trainer.fit(model)
 
