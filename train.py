@@ -14,6 +14,8 @@ flags.DEFINE_string('input_path', default=None,
                     help='Path to the training dataset')
 flags.DEFINE_string('save_dir', default=None,
                     help='Path to save model')
+flags.DEFINE_string('version', default=None,
+                    help='Explain experiment version')
 flags.DEFINE_integer('max_epochs', default=10,
                      help='If given, uses this max epochs in training')
 flags.DEFINE_integer('cuda_device', default=0,
@@ -47,7 +49,8 @@ def main(argv):
 
     logger = TensorBoardLogger(
         save_dir=FLAGS.save_dir,
-        name='logs'
+        name='logs_' + FLAGS.model,
+        version=FLAGS.version
     )
 
     # most basic trainer, uses good defaults (1 gpu)
