@@ -2,7 +2,7 @@ from absl import app, flags, logging
 
 import torch
 from pytorch_lightning import Trainer, seed_everything
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 
 from model import Model
@@ -47,6 +47,14 @@ def main(argv):
         prefix='model.ckpt'
     )
 
+    early_stop = EarlyStopping(
+        monitor='val_loss',
+        patience=2,
+        strict=False,
+        verbose=False,
+        mode='min'
+    )
+
     logger = TensorBoardLogger(
         save_dir=FLAGS.save_dir,
         name='logs',
@@ -60,6 +68,7 @@ def main(argv):
                           distributed_backend='ddp',
                           log_gpu_memory=True,
                           checkpoint_callback=checkpoint_callback,
+                          early_stop_callback=early_stop,
                           max_epochs=FLAGS.max_epochs,
                           logger=logger)
         logging.info(f'There are {torch.cuda.device_count()} GPU(s) available.')
@@ -69,6 +78,7 @@ def main(argv):
                           gpus=FLAGS.cuda_device,
                           log_gpu_memory=True,
                           checkpoint_callback=checkpoint_callback,
+                          early_stop_callback=early_stop,
                           max_epochs=FLAGS.max_epochs,
                           logger=logger)
         logging.info(f'There are {torch.cuda.device_count()} GPU(s) available.')
@@ -76,6 +86,7 @@ def main(argv):
     else:
         trainer = Trainer(deterministic=True,
                           checkpoint_callback=checkpoint_callback,
+                          early_stop_callback=early_stop,
                           max_epochs=FLAGS.max_epochs,
                           logger=logger)
         logging.info('No GPU available, using the CPU instead.')
