@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader, RandomSampler, DistributedSampler, rand
 from torch.optim import Optimizer, Adam
 from torch.nn import CrossEntropyLoss
 from pytorch_lightning.core.lightning import LightningModule
+from pytorch_lightning.metrics.functional import accuracy, precision, recall
 
 from dataset import Dataset
 
@@ -87,32 +88,48 @@ class Model(LightningModule):
             ]
         ]
     ]:
-        # REQUIRED
         logits = self.forward(batch)
         labels = batch['label']
         loss_fct = CrossEntropyLoss()
-        loss = loss_fct(logits.view(-1, 2), labels.view(-1))
+        loss = loss_fct(logits.view(-1, self.num_classes), labels.view(-1))
 
-        logs = {'train_loss': loss}
+        nn.utils.clip_grad_norm_(self.parameters(), 1.0)
 
-        return {'loss': loss, 'log': logs}
+        preds = torch.argmax(logits, dim=1)
+        acc = accuracy(preds, labels.view(-1), num_classes=self.num_classes)
+
+        train_logs = {'train_loss': loss, 'train_accuracy': acc}
+
+        return {'loss': loss, 'log': train_logs}
 
     def validation_step(self, batch, batch_idx) -> Dict[str, Tensor]:
-        # OPTIONAL
         logits = self.forward(batch)
         labels = batch['label']
         loss_fct = CrossEntropyLoss()
-        loss = loss_fct(logits.view(-1, 2), labels.view(-1))
+        loss = loss_fct(logits.view(-1, self.num_classes), labels.view(-1))
 
-        return {'val_loss': loss}
+        preds = torch.argmax(logits, dim=1)
+        val_acc = accuracy(preds, labels.view(-1), num_classes=self.num_classes)
+        val_pr = precision(preds, labels.view(-1), num_classes=self.num_classes)
+        val_rc = recall(preds, labels.view(-1), num_classes=self.num_classes)
+
+        return {'val_loss': loss,
+                'val_acc': val_acc,
+                'val_pr': val_pr,
+                'val_rc': val_rc}
 
     def validation_epoch_end(
             self,
             outputs: Union[List[Dict[str, Tensor]], List[List[Dict[str, Tensor]]]]
     ) -> Dict[str, Dict[str, Tensor]]:
-        # REQUIRED
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
+        avg_acc = torch.stack([x['val_acc'] for x in outputs]).mean()
+        avg_pr = torch.stack([x['val_pr'] for x in outputs]).mean()
+        avg_rc = torch.stack([x['val_rc'] for x in outputs]).mean()
 
-        logs = {'avg_val_loss': avg_loss}
+        logs = {'avg_val_loss': avg_loss,
+                'avg_val_acc': avg_acc,
+                'avg_val_pr': avg_pr,
+                'avg_val_rc': avg_rc}
         return {'val_loss': avg_loss, 'log': logs}
 
