@@ -14,6 +14,7 @@ class Model(LightningModule):
 
     def __init__(self,
                  input_path: str = None,
+                 num_classes: int = 2,
                  batch_size: int = 4,
                  num_workers: int = 0,
                  lr: float = 2e-5,
@@ -24,6 +25,7 @@ class Model(LightningModule):
         self.dataset = Dataset(input_path)
         self.layer = nn.Module()
 
+        self.num_classes = num_classes
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.lr = lr
