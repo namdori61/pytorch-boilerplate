@@ -6,11 +6,11 @@ from torch.utils.data import Dataset
 
 logger = logging.getLogger(__name__)
 
-class Dataset(Dataset):
+class CumstomDataset(Dataset):
     def __init__(self,
-                 input_path: str = None)
+                 input_path: str = None):
 
-        logger.info(f'Reading file at {file_path}')
+        logger.info(f'Reading file at {input_path}')
 
         with open(input_path) as dataset_file:
             self.dataset = dataset_file.readlines()

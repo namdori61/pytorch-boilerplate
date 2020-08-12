@@ -8,7 +8,7 @@ from torch.nn import CrossEntropyLoss
 from pytorch_lightning.core.lightning import LightningModule
 from pytorch_lightning.metrics.functional import accuracy, precision, recall
 
-from dataset import Dataset
+from dataset import CumstomDataset
 
 class Model(LightningModule):
 
@@ -22,7 +22,7 @@ class Model(LightningModule):
         super(Model, self).__init__()
         # REQUIRED
         # define dataset and layers
-        self.dataset = Dataset(input_path)
+        self.dataset = CumstomDataset(input_path)
         self.layer = nn.Module()
 
         self.num_classes = num_classes
